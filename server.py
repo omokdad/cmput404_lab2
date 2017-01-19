@@ -20,14 +20,43 @@ while True:
     
     clientSocket.connect(("www.google.com",80))    
     
-    request = bytearray()
+    incomingSocket.setblocking(0)  
+    clientSocket.setblocking(0)    
     
     while True:
-        part = incomingSocket.recv(1024)
-        if (part):
-            request.extend(part)
-            clientSocket.sendall(part)
-        else:
-            break   
+        request = bytearray()
         
-    print request
+        while True:
+            try:
+                part = incomingSocket.recv(1024)
+            except IOError, e:
+                if e.errno == socket.errno.EAGAIN:
+                    break
+                else:
+                    raise
+            if (part):
+                request.extend(part)
+                clientSocket.sendall(part)
+            else:
+                break   
+            
+        if len(request) > 0:    
+            print request
+        
+        response = bytearray()
+        
+        while True:
+            try:
+                part = clientSocket.recv(1024)
+            except IOError, e:
+                if e.errno == socket.errno.EAGAIN:
+                    break
+                else:
+                    raise
+            if (part):
+                response.extend(part)
+                incomingSocket.sendall(part)
+            else:
+                break   
+        if len(response) > 0:    
+            print response
